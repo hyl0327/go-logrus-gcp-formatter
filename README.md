@@ -15,15 +15,15 @@ import (
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
-	joonix "github.com/joonix/log"
+	gcplog "github.com/hyl0327/go-logrus-gcp-formatter"
 )
 
 func main() {
-	log.SetFormatter(joonix.NewFormatter())
+	log.SetFormatter(gcplog.NewFormatter())
 	log.Info("hello world!")
 
 	// log a HTTP request in your handler
-	log.WithField("httpRequest", &joonix.HTTPRequest{
+	log.WithField("httpRequest", &gcplog.HTTPRequest{
 		Request: r,
 		Status: http.StatusOK,
 		ResponseSize: 31337,

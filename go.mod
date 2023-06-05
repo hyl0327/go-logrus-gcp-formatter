@@ -1,4 +1,4 @@
-module github.com/joonix/log
+module github.com/hyl0327/go-logrus-gcp-formatter
 
 go 1.12
 
