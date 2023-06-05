@@ -104,7 +104,7 @@ func (r HTTPRequest) MarshalJSON() ([]byte, error) {
 		e.ResponseSize = fmt.Sprintf("%d", r.ResponseSize)
 	}
 	if r.Latency != 0 {
-		e.Latency = fmt.Sprintf("%ds", r.Latency/time.Second)
+		e.Latency = fmt.Sprintf("%.6fs", float32(r.Latency)/float32(time.Second))
 	}
 
 	return json.Marshal(e)
