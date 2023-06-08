@@ -19,9 +19,6 @@ go get github.com/hyl0327/go-logrus-gcp-formatter
 package main
 
 import (
-	"time"
-	"net/http"
-
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	log "github.com/sirupsen/logrus"
