@@ -1,11 +1,19 @@
-# Log
+# go-logrus-gcp-formatter
 
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/joonix/log)
 
-Formatter for logrus, allowing log entries to be recognized by the fluentd
-Stackdriver agent on Google Cloud Platform.
+Forked from `joonix/log`. Formatter for logrus, allowing log entries to be
+recognized by the fluentd Stackdriver agent on Google Cloud Platform.
 
-Example:
+
+## Installation
+
+```
+go get github.com/hyl0327/go-logrus-gcp-formatter
+```
+
+
+## Example (using Echo)
 
 ```go
 package main
@@ -14,36 +22,40 @@ import (
 	"time"
 	"net/http"
 
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	log "github.com/sirupsen/logrus"
 	gcplog "github.com/hyl0327/go-logrus-gcp-formatter"
 )
 
 func main() {
 	log.SetFormatter(gcplog.NewFormatter())
-	log.Info("hello world!")
 
-	// log a HTTP request in your handler
-	log.WithField("httpRequest", &gcplog.HTTPRequest{
-		Request: r,
-		Status: http.StatusOK,
-		ResponseSize: 31337,
-		Latency: 123*time.Millisecond,
-	}).Info("additional info")
+	e := echo.New()
+
+	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		LogError:        true,
+		LogStatus:       true,
+		LogLatency:      true,
+		LogResponseSize: true,
+		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+			l := log.WithField("httpRequest", &gcplog.HTTPRequest{
+				Request:      c.Request(),
+				Status:       v.Status,
+				Latency:      v.Latency,
+				ResponseSize: v.ResponseSize,
+			})
+
+			if v.Error != nil {
+				l.Error(v.Error)
+			} else {
+				l.Info()
+			}
+
+			return nil
+		},
+	}))
+
+	// ...
 }
 ```
-
-## Alternatives
-
-- https://github.com/TV4/logrus-stackdriver-formatter (seems abandoned)
-- https://github.com/knq/sdhook (implemented as a hook, doesn't require fluentd)
-- https://github.com/joonix/log/issues/2 (you can map the format yourself)
-
-## Kubernetes logging from outside of GCP
-
-It is possible to run the google edition of fluentd a.k.a. stackdriver agent outside of GCP,
-just a bit tricky to configure. See following references for more info:
-
-- Fluentd build: https://github.com/GoogleCloudPlatform/k8s-stackdriver/tree/master/fluentd-gcp-image
-- Manifest examples: https://github.com/kubernetes/kubernetes/tree/master/cluster/addons/fluentd-gcp
-- Manifest vars (fluentd_gcp_yaml_version): https://github.com/kubernetes/kubernetes/blob/master/cluster/gce/config-default.sh
-- Tutorial (old manifest): https://kubernetes.io/docs/tasks/debug-application-cluster/logging-stackdriver/
